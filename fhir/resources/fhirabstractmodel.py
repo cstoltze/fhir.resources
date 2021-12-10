@@ -65,6 +65,19 @@ class WrongResourceType(PydanticValueError):
 class FHIRAbstractModel(BaseModel, abc.ABC):
     """Abstract base model class for all FHIR elements."""
 
+    class Config:
+        @staticmethod
+        def schema_extra(
+            schema: typing.Dict[str, typing.Any],
+            model: typing.Type["FHIRAbstractModel"],
+        ) -> None:
+            current_schema = schema.get("properties", {})
+
+            for key in list(current_schema.keys()):
+                if "_" in key:
+                    current_schema.pop(key)
+            schema["properties"] = current_schema
+
     resource_type: str = ...  # type: ignore
 
     fhir_comments: typing.Union[str, typing.List[str]] = Field(

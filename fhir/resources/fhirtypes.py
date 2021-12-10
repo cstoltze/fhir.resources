@@ -19,7 +19,7 @@ from pydantic.types import (
 from pydantic.validators import bool_validator, parse_date, parse_datetime, parse_time
 
 from .fhirabstractmodel import FHIRAbstractModel
-from .fhirtypesvalidators import run_validator_for_fhir_type
+from .fhirtypesvalidators import run_validator_for_fhir_type, get_fhir_model_class
 
 if TYPE_CHECKING:
     from pydantic.types import CallableGenerator
@@ -630,8 +630,20 @@ class AbstractType(dict):
     __resource_type__: str = ...  # type: ignore
 
     @classmethod
+    def schema(cls):
+        klass = get_fhir_model_class(cls.__resource_type__)
+        return klass.schema()
+
+    @classmethod
     def __modify_schema__(cls, field_schema: Dict[str, Any]) -> None:
         field_schema.update(type=cls.__resource_type__)
+        klass = get_fhir_model_class(cls.__resource_type__)
+        print(cls.__resource_type__)
+        if (
+            cls.__resource_type__ != "Extension"
+            and cls.__resource_type__ != "Identifier"
+        ):
+            field_schema = klass.schema()
 
     @classmethod
     def __get_validators__(cls) -> "CallableGenerator":
